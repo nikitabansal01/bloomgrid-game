@@ -29,7 +29,7 @@ type AdContextValue = {
 
 const AdContext = createContext<AdContextValue | null>(null);
 
-const MIN_SESSION_FOR_INTERSTITIAL_SEC = 30;
+const MIN_SESSION_FOR_INTERSTITIAL_SEC = 12;
 const INTERSTITIAL_COOLDOWN_MS = 45_000;
 
 export function AdProvider({ children }: { children: React.ReactNode }) {

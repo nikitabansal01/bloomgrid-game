@@ -1,18 +1,25 @@
 export const colors = {
-  bg: '#0a0a12',
-  bgCard: '#12121f',
-  neonPink: '#ff2d95',
-  neonCyan: '#00f5ff',
-  neonPurple: '#a855f7',
-  neonYellow: '#facc15',
-  text: '#f8fafc',
-  textMuted: '#94a3b8',
-  danger: '#ef4444',
-  perfect: '#4ade80',
+  bg: '#faf6f1',
+  bgWash: '#f3ebe3',
+  bgCard: '#ffffff',
+  lavender: '#c9b8e8',
+  peach: '#f5c4a8',
+  mint: '#b8e0d2',
+  rose: '#e8a4b8',
+  text: '#4a4038',
+  textMuted: '#8a7f75',
+  accent: '#d4849a',
+  accentDark: '#b86a82',
+  gridLine: '#e8ddd4',
+  gridLineBold: '#c9b8a8',
+  cellSelected: '#fff4ec',
+  cellGiven: '#f0e8e0',
+  cellError: '#fde8e8',
+  cellHint: '#e8f4ef',
+  success: '#7eb89a',
+  shadow: 'rgba(74, 64, 56, 0.12)',
 };
 
-export const GAME_WIDTH = 320;
-export const LAYER_HEIGHT = 22;
-export const INITIAL_BLOCK_WIDTH = 120;
-export const MIN_OVERLAP_RATIO = 0.12;
-export const PERFECT_RATIO = 0.92;
+export const SUDOKU_SIZE = 6;
+export const BOX_WIDTH = 3;
+export const BOX_HEIGHT = 2;

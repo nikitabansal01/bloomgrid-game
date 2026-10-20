@@ -1,69 +1,123 @@
 import { StatusBar } from 'expo-status-bar';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { SafeAreaView, StyleSheet } from 'react-native';
 import { AdProvider, useAds } from './src/ads/AdProvider';
-import { GameOverScreen } from './src/screens/GameOverScreen';
+import { useGameAudio } from './src/audio/useGameAudio';
+import { CompleteScreen } from './src/screens/CompleteScreen';
 import { MenuScreen } from './src/screens/MenuScreen';
 import { PlayScreen } from './src/screens/PlayScreen';
-import { useStackGame } from './src/game/useStackGame';
-import { loadBestScore, saveBestScore } from './src/storage/bestScore';
+import { useSudokuGame } from './src/game/useSudokuGame';
+import {
+  loadMuted,
+  loadProgress,
+  recordPuzzleWin,
+  saveMuted,
+  type ProgressStats,
+} from './src/storage/progress';
 import { colors } from './src/theme';
 
-type Screen = 'menu' | 'play' | 'gameover';
+type Screen = 'menu' | 'play' | 'complete';
 
 function GameRoot() {
   const [screen, setScreen] = useState<Screen>('menu');
-  const [bestScore, setBestScore] = useState(0);
-  const { state, placeBlock, resetRun, continueAfterAd, sessionSeconds } = useStackGame();
+  const [progress, setProgress] = useState<ProgressStats>({
+    streakDays: 0,
+    lastPlayDate: null,
+    puzzlesToday: 0,
+    bestTimeSec: null,
+    totalSolved: 0,
+  });
+  const [muted, setMuted] = useState(false);
+  const [completeElapsed, setCompleteElapsed] = useState(0);
+  const [isNewBest, setIsNewBest] = useState(false);
+  const winHandled = useRef(false);
+
+  const {
+    state,
+    selectCell,
+    placeValue,
+    clearCell,
+    applyHint,
+    resetRun,
+    sessionSeconds,
+    clearAffirmation,
+  } = useSudokuGame();
   const { showInterstitialIfAllowed } = useAds();
+  const { playPlace, playWin } = useGameAudio(muted);
 
   useEffect(() => {
-    void loadBestScore().then(setBestScore);
+    void loadProgress().then(setProgress);
+    void loadMuted().then(setMuted);
   }, []);
 
   useEffect(() => {
-    if (state.phase !== 'gameover' || screen !== 'play') return;
-    setScreen('gameover');
+    if (state.phase !== 'won' || screen !== 'play') return;
+    if (winHandled.current) return;
+    winHandled.current = true;
+    const elapsed = sessionSeconds();
+    setCompleteElapsed(elapsed);
     void (async () => {
-      const updated = await saveBestScore(state.stats.score);
-      setBestScore(updated);
-      await showInterstitialIfAllowed(sessionSeconds());
+      playWin();
+      const prevBest = progress.bestTimeSec;
+      const updated = await recordPuzzleWin(elapsed);
+      setProgress(updated);
+      setIsNewBest(prevBest == null || elapsed < prevBest);
+      setScreen('complete');
+      await showInterstitialIfAllowed(elapsed);
     })();
-  }, [state.phase, screen, state.stats.score, showInterstitialIfAllowed, sessionSeconds]);
+  }, [
+    state.phase,
+    screen,
+    sessionSeconds,
+    showInterstitialIfAllowed,
+    playWin,
+    progress.bestTimeSec,
+  ]);
 
   const startPlay = useCallback(() => {
+    winHandled.current = false;
     resetRun();
     setScreen('play');
   }, [resetRun]);
 
-  const handleRetry = useCallback(() => {
-    resetRun();
-    setScreen('play');
-  }, [resetRun]);
-
-  const handleContinue = useCallback(async () => {
-    continueAfterAd();
-    setScreen('play');
-  }, [continueAfterAd]);
-
-  const layers = Math.max(0, state.layer - 1);
+  const handleToggleMute = useCallback(() => {
+    setMuted((m) => {
+      const next = !m;
+      void saveMuted(next);
+      return next;
+    });
+  }, []);
 
   return (
     <SafeAreaView style={styles.safe}>
-      <StatusBar style="light" />
-      {screen === 'menu' && <MenuScreen bestScore={bestScore} onPlay={startPlay} />}
-      {screen === 'play' && state.phase === 'playing' && (
-        <PlayScreen state={state} onTap={placeBlock} />
+      <StatusBar style="dark" />
+      {screen === 'menu' && (
+        <MenuScreen
+          progress={progress}
+          muted={muted}
+          onToggleMute={handleToggleMute}
+          onPlay={startPlay}
+        />
       )}
-      {screen === 'gameover' && (
-        <GameOverScreen
-          stats={state.stats}
-          bestScore={bestScore}
-          layers={layers}
-          continueUsed={state.continueUsed}
-          onRetry={handleRetry}
+      {screen === 'play' && (
+        <PlayScreen
+          state={state}
+          startedAt={state.startedAt}
+          onSelect={selectCell}
+          onPick={placeValue}
+          onClear={clearCell}
+          onHint={applyHint}
+          onAffirmationDone={clearAffirmation}
+          onPlaceSound={playPlace}
+        />
+      )}
+      {screen === 'complete' && (
+        <CompleteScreen
+          elapsedSec={completeElapsed}
+          progress={progress}
+          isNewBest={isNewBest}
+          onPlayAgain={startPlay}
           onMenu={() => setScreen('menu')}
-          onContinue={handleContinue}
         />
       )}
     </SafeAreaView>

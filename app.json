@@ -1,33 +1,33 @@
 {
   "expo": {
-    "name": "NeonSlice",
-    "slug": "neonslice",
+    "name": "Meowdoku",
+    "slug": "meowdoku",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "dark",
-    "scheme": "neonslice",
+    "userInterfaceStyle": "light",
+    "scheme": "meowdoku",
     "newArchEnabled": true,
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#0a0a12"
+      "backgroundColor": "#faf6f1"
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.neonslice.game",
+      "bundleIdentifier": "com.meowdoku.game",
       "infoPlist": {
-        "NSUserTrackingUsageDescription": "NeonSlice uses this identifier to show relevant ads and support the free game."
+        "NSUserTrackingUsageDescription": "Meowdoku uses this identifier to show relevant ads and support the free cozy sudoku game."
       }
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#0a0a12",
+        "backgroundColor": "#faf6f1",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "package": "com.neonslice.game",
+      "package": "com.meowdoku.game",
       "predictiveBackGestureEnabled": false
     },
     "web": {

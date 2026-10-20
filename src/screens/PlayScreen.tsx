@@ -1,61 +1,140 @@
-import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import { StackBoard } from '../components/StackBoard';
-import type { StackGameState } from '../game/useStackGame';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useAds } from '../ads/AdProvider';
+import { AffirmationFlash } from '../components/AffirmationFlash';
+import { CatMascot } from '../components/CatMascot';
+import { NumberPad } from '../components/NumberPad';
+import { SudokuBoard } from '../components/SudokuBoard';
+import type { SudokuGameState } from '../game/useSudokuGame';
 import { colors } from '../theme';
 
 type Props = {
-  state: StackGameState;
-  onTap: () => void;
+  state: SudokuGameState;
+  startedAt: number;
+  onSelect: (row: number, col: number) => void;
+  onPick: (n: number) => void;
+  onClear: () => void;
+  onHint: () => void;
+  onAffirmationDone: () => void;
+  onPlaceSound: () => void;
 };
 
-export function PlayScreen({ state, onTap }: Props) {
-  const { stats, combo } = state;
+export function PlayScreen({
+  state,
+  startedAt,
+  onSelect,
+  onPick,
+  onClear,
+  onHint,
+  onAffirmationDone,
+  onPlaceSound,
+}: Props) {
+  const { showRewardedContinue } = useAds();
+  const [loadingHint, setLoadingHint] = useState(false);
+  const [elapsed, setElapsed] = useState(0);
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      setElapsed(Math.floor((Date.now() - startedAt) / 1000));
+    }, 1000);
+    return () => clearInterval(id);
+  }, [startedAt]);
+
+  const handlePick = (n: number) => {
+    onPick(n);
+    onPlaceSound();
+  };
+
+  const handleHint = async () => {
+    if (state.hintUsed) return;
+    setLoadingHint(true);
+    try {
+      const ok = await showRewardedContinue();
+      if (ok) onHint();
+    } finally {
+      setLoadingHint(false);
+    }
+  };
+
   return (
     <View style={styles.root}>
-      <View style={styles.hud}>
-        <View>
-          <Text style={styles.hudLabel}>SCORE</Text>
-          <Text style={styles.hudValue}>{stats.score}</Text>
-        </View>
-        <View style={styles.hudCenter}>
-          <Text style={styles.hudLabel}>LAYERS</Text>
-          <Text style={styles.hudValue}>{Math.max(0, state.layer - 1)}</Text>
-        </View>
-        <View style={styles.hudRight}>
-          <Text style={styles.hudLabel}>COMBO</Text>
-          <Text style={styles.hudValue}>{combo > 0 ? `${combo}x` : '—'}</Text>
-        </View>
+      <View style={styles.wash} />
+      <View style={styles.header}>
+        <CatMascot size={36} />
+        <Text style={styles.timer}>{formatTime(elapsed)}</Text>
+        <Pressable
+          style={[styles.hintBtn, state.hintUsed && styles.hintUsed]}
+          onPress={handleHint}
+          disabled={state.hintUsed || loadingHint}
+        >
+          {loadingHint ? (
+            <ActivityIndicator color={colors.accentDark} size="small" />
+          ) : (
+            <Text style={styles.hintText}>{state.hintUsed ? 'Hint used' : 'Hint 🎬'}</Text>
+          )}
+        </Pressable>
       </View>
-      <StackBoard state={state} onTap={onTap} />
+      <SudokuBoard state={state} onSelect={onSelect} />
+      <NumberPad
+        onPick={handlePick}
+        onClear={onClear}
+        disabled={!state.selected || state.phase !== 'playing'}
+      />
+      <AffirmationFlash event={state.affirmation} onDone={onAffirmationDone} />
     </View>
   );
+}
+
+function formatTime(sec: number): string {
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  return `${m}:${s.toString().padStart(2, '0')}`;
 }
 
 const styles = StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.bg,
-    paddingTop: 56,
+    paddingTop: 48,
     paddingHorizontal: 16,
+    alignItems: 'center',
   },
-  hud: {
+  wash: {
+    ...StyleSheet.absoluteFill,
+    backgroundColor: colors.lavender,
+    opacity: 0.18,
+  },
+  header: {
+    width: '100%',
     flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 8,
-    paddingHorizontal: 8,
+    marginBottom: 16,
+    paddingHorizontal: 4,
   },
-  hudCenter: { alignItems: 'center' },
-  hudRight: { alignItems: 'flex-end' },
-  hudLabel: {
-    color: colors.textMuted,
-    fontSize: 11,
-    letterSpacing: 2,
-    fontWeight: '700',
-  },
-  hudValue: {
-    color: colors.neonCyan,
-    fontSize: 28,
+  timer: {
+    fontSize: 20,
     fontWeight: '800',
+    color: colors.text,
+  },
+  hintBtn: {
+    backgroundColor: colors.bgCard,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 12,
+    minWidth: 96,
+    alignItems: 'center',
+    shadowColor: colors.shadow,
+    shadowOpacity: 1,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+  },
+  hintUsed: {
+    opacity: 0.6,
+  },
+  hintText: {
+    fontWeight: '700',
+    color: colors.accentDark,
+    fontSize: 14,
   },
 });
