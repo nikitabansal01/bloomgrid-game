@@ -9,7 +9,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { HealthDisclaimer } from '../components/HealthDisclaimer';
 import { MenuBanner } from '../ads/AdProvider';
-import { CatMascot } from '../components/CatMascot';
+import { CycleMascot } from '../components/CycleMascot';
 import { dailySeed } from '../game/sudoku';
 import { loadStreak, StreakData } from '../storage/gameStorage';
 import { cycleCopy, palette } from '../theme/colors';
@@ -34,9 +34,12 @@ export function HomeScreen({ onPlay }: Props) {
     <SafeAreaView style={styles.root} edges={['top', 'left', 'right']}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <View style={styles.hero}>
-          <CatMascot size={48} />
+          <CycleMascot size={48} />
           <Text style={styles.title}>BloomGrid</Text>
-          <Text style={styles.tagline}>Soft sudoku for every phase of your cycle</Text>
+          <Text style={styles.tagline}>Cycle-positive sudoku — gentle, normal, yours</Text>
+          <Text style={styles.subtagline}>
+            A calm daily grid that honors rest days and energetic days alike.
+          </Text>
         </View>
 
         <View style={styles.card}>
@@ -87,6 +90,14 @@ const styles = StyleSheet.create({
     color: palette.inkSoft,
     marginTop: 6,
     textAlign: 'center',
+  },
+  subtagline: {
+    fontSize: 13,
+    lineHeight: 19,
+    color: palette.inkSoft,
+    marginTop: 8,
+    textAlign: 'center',
+    maxWidth: 300,
   },
   card: {
     backgroundColor: palette.white,

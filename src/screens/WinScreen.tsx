@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { useAds } from '../ads/AdProvider';
 import { AffirmationBackdrop } from '../components/AffirmationBackdrop';
-import { CatMascot } from '../components/CatMascot';
+import { CycleMascot } from '../components/CycleMascot';
 import { MoodPicker } from '../components/MoodPicker';
 import {
   getShareLine,
@@ -58,9 +58,12 @@ export function WinScreen({ sessionSeconds, onHome }: Props) {
     <View style={styles.root}>
       <AffirmationBackdrop active />
       <ScrollView contentContainerStyle={styles.scroll}>
-        <CatMascot mood="celebrate" size={64} />
+        <CycleMascot mood="celebrate" size={64} />
         <Text style={styles.title}>You did it ✿</Text>
         <Text style={styles.sub}>{copy}</Text>
+        <Text style={styles.normalize}>
+          However your body feels today is valid — this win is just for you.
+        </Text>
 
         <View style={styles.streakCard}>
           <Text style={styles.streakNum}>{streak.count}</Text>
@@ -107,6 +110,15 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 12,
     maxWidth: 320,
+  },
+  normalize: {
+    fontSize: 13,
+    lineHeight: 19,
+    color: palette.inkSoft,
+    textAlign: 'center',
+    marginTop: 10,
+    maxWidth: 300,
+    fontStyle: 'italic',
   },
   streakCard: {
     marginTop: 28,

@@ -2,6 +2,8 @@
 
 Soft **6×6 sudoku** with cycle-positive copy, gentle SFX, affirmation celebrations, daily puzzle streaks, and optional mood emoji (stored on-device only). Built with **Expo SDK 58** (52+) for **iOS App Store** and **Google Play**.
 
+**Brand:** BloomGrid uses abstract cycle visuals (ring, phases, crescent) — **no cat characters or mascots**. Cozy cat sudoku lives in a separate Meowdoku-style product; this app stays menstrual-cycle / wellness themed only.
+
 > **Not medical advice.** BloomGrid is a puzzle game, not a medical device or period tracker. It does not diagnose, treat, or predict your cycle. See in-app disclaimer and [Health & privacy](#health--privacy) below.
 
 Product vision (Project Context): `docs/period-puzzle-game-vision.md` in the Game Design project store.

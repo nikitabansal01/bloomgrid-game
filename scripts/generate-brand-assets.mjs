@@ -84,16 +84,36 @@ function dist(x, y, cx, cy) {
   return Math.hypot(x - cx, y - cy);
 }
 
+/** Cycle ring + crescent center — pastel BloomGrid branding (no characters). */
 function drawBloomIcon(size) {
   return fill(size, (x, y, s) => {
     const cx = s / 2;
     const cy = s / 2;
     const r = dist(x, y, cx, cy);
-    if (r > s * 0.46) return [...CREAM, 0];
-    if (r < s * 0.12) return [...LAVENDER, 255];
-    const ring = Math.sin((r / s) * Math.PI * 6) * 0.5 + 0.5;
-    if (ring > 0.55) return [...BLUSH, 255];
-    return [...SAGE, 255];
+    if (r > s * 0.48) return [...CREAM, 0];
+    if (r > s * 0.44 && r < s * 0.47) return [...LAVENDER, 220];
+    const phaseDot = (px, py, rad, col) => {
+      const d = dist(x, y, px, py);
+      return d < rad ? col : null;
+    };
+    const ringR = s * 0.34;
+    const dotR = s * 0.045;
+    const dots = [
+      [cx, cy - ringR, SAGE],
+      [cx + ringR, cy, LAVENDER],
+      [cx, cy + ringR, BLUSH],
+      [cx - ringR, cy, SAGE],
+    ];
+    for (const [px, py, col] of dots) {
+      const hit = phaseDot(px, py, dotR, [...col, 255]);
+      if (hit) return hit;
+    }
+    const moonR = s * 0.14;
+    const moonCx = cx + s * 0.03;
+    if (dist(x, y, moonCx, cy) < moonR) return [...LAVENDER, 255];
+    if (dist(x, y, cx + s * 0.08, cy) < moonR * 0.88) return [...BLUSH, 255];
+    if (r < s * 0.1) return [...BLUSH, 180];
+    return [...CREAM, 255];
   });
 }
 
@@ -111,14 +131,7 @@ function drawSplash(size) {
 }
 
 function drawAndroidForeground(size) {
-  return fill(size, (x, y, s) => {
-    const cx = s / 2;
-    const cy = s / 2;
-    const r = dist(x, y, cx, cy);
-    if (r > s * 0.38) return [...CREAM, 0];
-    if (r < s * 0.1) return [...INK, 255];
-    return r % 24 < 12 ? [...LAVENDER, 255] : [...BLUSH, 255];
-  });
+  return drawBloomIcon(size);
 }
 
 function drawAndroidBackground(size) {
@@ -130,8 +143,14 @@ function drawMonochrome(size) {
     const cx = s / 2;
     const cy = s / 2;
     const r = dist(x, y, cx, cy);
-    if (r > s * 0.38) return [0, 0, 0, 0];
-    return [255, 255, 255, 255];
+    if (r > s * 0.48) return [0, 0, 0, 0];
+    if (r > s * 0.44 && r < s * 0.47) return [255, 255, 255, 255];
+    if (dist(x, y, cx, cy - s * 0.34) < s * 0.045) return [255, 255, 255, 255];
+    if (dist(x, y, cx + s * 0.34, cy) < s * 0.045) return [255, 255, 255, 255];
+    if (dist(x, y, cx, cy + s * 0.34) < s * 0.045) return [255, 255, 255, 255];
+    if (dist(x, y, cx - s * 0.34, cy) < s * 0.045) return [255, 255, 255, 255];
+    if (dist(x, y, cx + s * 0.03, cy) < s * 0.14) return [255, 255, 255, 255];
+    return [0, 0, 0, 0];
   });
 }
 
