@@ -10,7 +10,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { HealthDisclaimer } from '../components/HealthDisclaimer';
 import { MenuBanner } from '../ads/AdProvider';
 import { CycleMascot } from '../components/CycleMascot';
-import { dailySeed } from '../game/sudoku';
+import { dailySeed } from '../game/queens';
 import { loadStreak, StreakData } from '../storage/gameStorage';
 import { cycleCopy, palette } from '../theme/colors';
 
@@ -36,7 +36,7 @@ export function HomeScreen({ onPlay }: Props) {
         <View style={styles.hero}>
           <CycleMascot size={48} />
           <Text style={styles.title}>BloomGrid</Text>
-          <Text style={styles.tagline}>Cycle-positive sudoku — gentle, normal, yours</Text>
+          <Text style={styles.tagline}>Cycle-positive logic puzzle — gentle, normal, yours</Text>
           <Text style={styles.subtagline}>
             A calm daily grid that honors rest days and energetic days alike.
           </Text>
@@ -114,7 +114,7 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 13,
     fontWeight: '600',
-    color: palette.lavenderDeep,
+    color: palette.plum,
     textTransform: 'uppercase',
     letterSpacing: 1,
   },
@@ -134,7 +134,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
     fontSize: 16,
     fontWeight: '600',
-    color: palette.sageDeep,
+    color: palette.sageInk,
   },
   streakMuted: {
     marginTop: 16,
@@ -143,7 +143,7 @@ const styles = StyleSheet.create({
   },
   playBtn: {
     marginTop: 20,
-    backgroundColor: palette.lavenderDeep,
+    backgroundColor: palette.plum,
     paddingVertical: 16,
     borderRadius: 16,
     alignItems: 'center',
