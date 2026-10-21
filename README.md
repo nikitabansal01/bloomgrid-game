@@ -1,8 +1,8 @@
 # BloomGrid
 
-Soft **6×6 sudoku** with cycle-positive copy, gentle SFX, affirmation celebrations, daily puzzle streaks, and optional mood emoji (stored on-device only). Built with **Expo SDK 58** (52+) for **iOS App Store** and **Google Play**.
+Soft **6×6 placement logic puzzle** (Queens-style: one 🩸 token per row, column, and colored region; tokens never touch, even diagonally) with cycle-positive copy, gentle SFX, affirmation celebrations, daily puzzle streaks, and optional mood emoji (stored on-device only). Built with **Expo SDK 58** (52+) for **iOS App Store** and **Google Play**.
 
-**Brand:** BloomGrid uses abstract cycle visuals (ring, phases, crescent) — **no cat characters or mascots**. Cozy cat sudoku lives in a separate Meowdoku-style product; this app stays menstrual-cycle / wellness themed only.
+**Brand:** BloomGrid uses abstract cycle visuals (ring, phases, crescent) — **no cat characters or mascots**. Cozy cat puzzles live in a separate Meowdoku-style product; this app stays menstrual-cycle / wellness themed only.
 
 > **Not medical advice.** BloomGrid is a puzzle game, not a medical device or period tracker. It does not diagnose, treat, or predict your cycle. See in-app disclaimer and [Health & privacy](#health--privacy) below.
 
@@ -18,6 +18,11 @@ npx expo start
 
 - **iOS / Android:** use a [development build](#native-builds--ads) (required for AdMob). Expo Go will run the puzzle, but Google Mobile Ads need native modules.
 - **Web (optional):** `npx expo start --web` — puzzle works; ads are stubbed only.
+- **Tests:** `npm test` (puzzle rules, solver uniqueness) and `npm run typecheck`.
+
+### Puzzle
+
+Each daily board is generated from the date: a random non-touching token layout, regions grown around each token, then regions are adjusted until the solver (`src/game/queens.ts`) finds exactly one solution. Tap a cell to cycle empty → ✕ → token → empty (long-press toggles the token). The token emoji is the single constant `THEME_TOKEN` in `src/theme/colors.ts`.
 
 ## Native builds & ads
 

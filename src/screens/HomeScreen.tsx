@@ -10,7 +10,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { HealthDisclaimer } from '../components/HealthDisclaimer';
 import { MenuBanner } from '../ads/AdProvider';
 import { CycleMascot } from '../components/CycleMascot';
-import { dailySeed } from '../game/sudoku';
+import { dailySeed } from '../game/queens';
 import { loadStreak, StreakData } from '../storage/gameStorage';
 import { cycleCopy, palette } from '../theme/colors';
 
@@ -36,7 +36,7 @@ export function HomeScreen({ onPlay }: Props) {
         <View style={styles.hero}>
           <CycleMascot size={48} />
           <Text style={styles.title}>BloomGrid</Text>
-          <Text style={styles.tagline}>Cycle-positive sudoku — gentle, normal, yours</Text>
+          <Text style={styles.tagline}>Cycle-positive logic puzzle — gentle, normal, yours</Text>
           <Text style={styles.subtagline}>
             A calm daily grid that honors rest days and energetic days alike.
           </Text>

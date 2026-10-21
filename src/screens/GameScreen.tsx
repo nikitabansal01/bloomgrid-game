@@ -1,194 +1,123 @@
 import React, { useCallback, useMemo, useRef, useState } from 'react';
-import {
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { playSound } from '../audio/soundManager';
-import { BOARD_WIDTH, SudokuGrid } from '../components/SudokuGrid';
+import { QueensBoard, useCellSize } from '../components/QueensBoard';
 import {
-  BOX_COLS,
-  BOX_ROWS,
+  Board,
   dailySeed,
-  generateSolution,
-  GRID_SIZE,
-  isBoxComplete,
-  isPuzzleComplete,
-  isRowComplete,
+  emptyBoard,
+  generatePuzzle,
+  getConflicts,
+  isSolved,
   isValidPlacement,
-  makePuzzle,
-} from '../game/sudoku';
-import { palette } from '../theme/colors';
+  Mark,
+  nextMark,
+  tokensOf,
+} from '../game/queens';
+import { palette, THEME_TOKEN } from '../theme/colors';
+
+export const BOARD_SIZE = 6;
 
 type Props = {
   onWin: (sessionSeconds: number, puzzleDate: string) => void;
   onBack: () => void;
 };
 
-function emptyNotes(): number[][][] {
-  return Array.from({ length: GRID_SIZE }, () =>
-    Array.from({ length: GRID_SIZE }, () => [] as number[]),
-  );
-}
-
-function cloneGrid(g: number[][]): number[][] {
-  return g.map((r) => [...r]);
-}
-
 export function GameScreen({ onWin, onBack }: Props) {
   // Fixed for the lifetime of this game so the puzzle can't change at midnight mid-play.
   const [seed] = useState(() => dailySeed());
-  const { puzzle, givensMask } = useMemo(() => {
-    const sol = generateSolution(seed);
-    return makePuzzle(sol, seed, 17);
-  }, [seed]);
+  const { regions } = useMemo(() => generatePuzzle(seed, BOARD_SIZE), [seed]);
 
-  const [grid, setGrid] = useState(() => cloneGrid(puzzle));
-  const [notes, setNotes] = useState(emptyNotes);
-  const [selected, setSelected] = useState<{ row: number; col: number } | null>(null);
-  const [noteMode, setNoteMode] = useState(false);
+  const [board, setBoard] = useState<Board>(() => emptyBoard(BOARD_SIZE));
   const startedAt = useRef(Date.now());
   const won = useRef(false);
-  const completedRows = useRef(new Set<number>());
-  const completedBoxes = useRef(new Set<string>());
+  const conflicts = useMemo(() => getConflicts(board, regions), [board, regions]);
+  const placed = tokensOf(board).length;
+  const boardWidth = useCellSize(BOARD_SIZE) * BOARD_SIZE;
 
-  const sessionSeconds = () => Math.floor((Date.now() - startedAt.current) / 1000);
+  const setMark = useCallback(
+    (row: number, col: number, mark: Mark) => {
+      if (won.current) return;
+      const previous = board[row][col];
+      const next = board.map((r) => [...r]);
+      next[row][col] = mark;
+      setBoard(next);
 
-  const tryWin = useCallback(
-    (next: number[][]) => {
-      if (won.current || !isPuzzleComplete(next)) return;
-      won.current = true;
-      void playSound('win');
-      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      onWin(sessionSeconds(), seed);
-    },
-    [onWin, seed],
-  );
-
-  const checkUnitComplete = useCallback((next: number[][], row: number, col: number) => {
-    if (isRowComplete(next, row) && !completedRows.current.has(row)) {
-      completedRows.current.add(row);
-      void playSound('complete');
-      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-    const br = Math.floor(row / BOX_ROWS);
-    const bc = Math.floor(col / BOX_COLS);
-    const key = `${br}-${bc}`;
-    if (isBoxComplete(next, br, bc) && !completedBoxes.current.has(key)) {
-      completedBoxes.current.add(key);
-      void playSound('complete');
-    }
-  }, []);
-
-  const placeDigit = useCallback(
-    (digit: number) => {
-      if (!selected) return;
-      const { row, col } = selected;
-      if (givensMask[row][col]) return;
-
-      if (noteMode) {
-        if (digit === 0) {
-          setNotes((prev) => {
-            const copy = prev.map((r) => r.map((c) => [...c]));
-            copy[row][col] = [];
-            return copy;
-          });
-          return;
+      if (mark === 'token') {
+        const others = board.map((r) => [...r]);
+        others[row][col] = 'empty';
+        if (isValidPlacement(others, regions, { row, col })) {
+          void playSound('place');
+          void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        } else {
+          void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
         }
-        setNotes((prev) => {
-          const copy = prev.map((r) => r.map((c) => [...c]));
-          const list = copy[row][col];
-          const idx = list.indexOf(digit);
-          if (idx >= 0) list.splice(idx, 1);
-          else list.push(digit);
-          list.sort((a, b) => a - b);
-          return copy;
-        });
-        return;
-      }
-
-      const next = cloneGrid(grid);
-      next[row][col] = digit;
-      setGrid(next);
-
-      if (digit === 0) {
+      } else if (previous === 'token') {
         void playSound('erase');
-        return;
-      }
-      if (isValidPlacement(next, row, col, digit, true)) {
-        void playSound('place');
-        void Haptics.selectionAsync();
-        setNotes((n) => {
-          const copy = n.map((r) => r.map((c) => [...c]));
-          copy[row][col] = [];
-          return copy;
-        });
-        checkUnitComplete(next, row, col);
-        tryWin(next);
       } else {
-        void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+        void Haptics.selectionAsync();
+      }
+
+      if (isSolved(next, regions)) {
+        won.current = true;
+        void playSound('win');
+        void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        onWin(Math.floor((Date.now() - startedAt.current) / 1000), seed);
       }
     },
-    [selected, givensMask, noteMode, grid, checkUnitComplete, tryWin],
+    [board, regions, onWin, seed],
   );
+
+  const onTap = useCallback(
+    (row: number, col: number) => setMark(row, col, nextMark(board[row][col])),
+    [board, setMark],
+  );
+
+  const onLongPress = useCallback(
+    (row: number, col: number) =>
+      setMark(row, col, board[row][col] === 'token' ? 'empty' : 'token'),
+    [board, setMark],
+  );
+
+  const onClear = () => {
+    if (won.current) return;
+    setBoard(emptyBoard(BOARD_SIZE));
+    void playSound('erase');
+  };
 
   return (
     <SafeAreaView style={styles.root} edges={['top', 'left', 'right']}>
       <ScrollView contentContainerStyle={styles.scroll}>
-        <View style={styles.topBar}>
-          <Pressable onPress={onBack} hitSlop={12}>
+        <View style={[styles.topBar, { width: boardWidth }]}>
+          <Pressable onPress={onBack} hitSlop={12} accessibilityRole="button">
             <Text style={styles.back}>← Home</Text>
           </Pressable>
-          <Text style={styles.heading}>Daily 6×6</Text>
-          <Pressable
-            onPress={() => setNoteMode((n) => !n)}
-            style={[styles.noteToggle, noteMode && styles.noteToggleOn]}
-          >
-            <Text style={[styles.noteToggleText, noteMode && styles.noteToggleTextOn]}>
-              Notes
-            </Text>
+          <Text style={styles.heading}>Daily bloom</Text>
+          <Pressable onPress={onClear} style={styles.clearBtn} accessibilityRole="button">
+            <Text style={styles.clearText}>Clear</Text>
           </Pressable>
         </View>
 
-        <Text style={styles.hint}>
-          {noteMode
-            ? 'Pencil mode — tap numbers to mark possibilities'
-            : 'Tap a cell, then a number. Conflicts glow softly.'}
+        <Text style={[styles.rules, { maxWidth: boardWidth }]}>
+          Place one {THEME_TOKEN} in every row, column, and color. Tokens can&apos;t touch — not
+          even diagonally.
         </Text>
 
-        <SudokuGrid
-          grid={grid}
-          givensMask={givensMask}
-          notes={notes}
-          selected={selected}
-          onSelect={(row, col) => setSelected({ row, col })}
+        <QueensBoard
+          board={board}
+          regions={regions}
+          conflicts={conflicts}
+          onTap={onTap}
+          onLongPress={onLongPress}
         />
 
-        <View style={styles.pad}>
-          <View style={styles.padRow}>
-            {[1, 2, 3, 4, 5, 6].map((d) => (
-              <Pressable
-                key={d}
-                style={({ pressed }) => [styles.padKey, pressed && styles.padKeyPressed]}
-                onPress={() => placeDigit(d)}
-                accessibilityRole="button"
-                accessibilityLabel={`Enter ${d}`}
-              >
-                <Text style={styles.padDigit}>{d}</Text>
-              </Pressable>
-            ))}
-          </View>
-          <Pressable
-            style={({ pressed }) => [styles.eraseKey, pressed && styles.padKeyPressed]}
-            onPress={() => placeDigit(0)}
-            accessibilityRole="button"
-          >
-            <Text style={styles.eraseText}>Erase</Text>
-          </Pressable>
+        <View style={[styles.footer, { width: boardWidth }]}>
+          <Text style={styles.hint}>Tap: ✕ → {THEME_TOKEN} → empty · Hold: {THEME_TOKEN}</Text>
+          <Text style={styles.progress} accessibilityLiveRegion="polite">
+            {placed} / {BOARD_SIZE} placed
+          </Text>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -201,95 +130,59 @@ const styles = StyleSheet.create({
     backgroundColor: palette.cream,
   },
   scroll: {
-    padding: 20,
+    paddingVertical: 20,
     paddingBottom: 40,
     alignItems: 'center',
   },
   topBar: {
-    width: '100%',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 8,
+    marginBottom: 12,
   },
   back: {
     color: palette.plum,
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: '600',
   },
   heading: {
     fontSize: 17,
-    fontWeight: '600',
+    fontWeight: '700',
     color: palette.ink,
   },
-  noteToggle: {
-    paddingHorizontal: 12,
+  clearBtn: {
+    paddingHorizontal: 14,
     paddingVertical: 6,
     borderRadius: 12,
-    borderWidth: 1,
-    borderColor: palette.lavender,
-    backgroundColor: palette.white,
+    borderWidth: 1.5,
+    borderColor: palette.buttonBorder,
+    backgroundColor: palette.buttonFill,
   },
-  noteToggleOn: {
-    backgroundColor: palette.sage,
-    borderColor: palette.sageDeep,
+  clearText: {
+    fontSize: 14,
+    color: palette.plum,
+    fontWeight: '700',
   },
-  noteToggleText: {
-    fontSize: 13,
-    color: palette.inkSoft,
-    fontWeight: '600',
-  },
-  noteToggleTextOn: {
+  rules: {
+    fontSize: 14,
+    lineHeight: 20,
     color: palette.ink,
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  footer: {
+    marginTop: 16,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   hint: {
     fontSize: 13,
     color: palette.inkSoft,
-    marginBottom: 16,
-    textAlign: 'center',
-    paddingHorizontal: 8,
   },
-  pad: {
-    width: BOARD_WIDTH,
-    maxWidth: '100%',
-    marginTop: 24,
-    gap: 10,
-  },
-  padRow: {
-    flexDirection: 'row',
-    gap: 6,
-  },
-  padKey: {
-    flex: 1,
-    height: 52,
-    borderRadius: 14,
-    backgroundColor: palette.padKey,
-    borderWidth: 1.5,
-    borderColor: palette.padBorder,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  padKeyPressed: {
-    backgroundColor: palette.selected,
-    borderColor: palette.plum,
-  },
-  padDigit: {
-    fontSize: 22,
+  progress: {
+    fontSize: 15,
     fontWeight: '700',
     color: palette.plum,
-  },
-  eraseKey: {
-    height: 48,
-    borderRadius: 14,
-    backgroundColor: palette.blush,
-    borderWidth: 1.5,
-    borderColor: palette.blushDeep,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  eraseText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: palette.ink,
   },
 });

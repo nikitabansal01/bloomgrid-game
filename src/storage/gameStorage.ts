@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { dailySeed } from '../game/sudoku';
+import { dailySeed } from '../game/queens';
 
 const KEYS = {
   streak: '@bloomgrid/streak',
