@@ -114,7 +114,7 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 13,
     fontWeight: '600',
-    color: palette.lavenderDeep,
+    color: palette.plum,
     textTransform: 'uppercase',
     letterSpacing: 1,
   },
@@ -134,7 +134,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
     fontSize: 16,
     fontWeight: '600',
-    color: palette.sageDeep,
+    color: palette.sageInk,
   },
   streakMuted: {
     marginTop: 16,
@@ -143,7 +143,7 @@ const styles = StyleSheet.create({
   },
   playBtn: {
     marginTop: 20,
-    backgroundColor: palette.lavenderDeep,
+    backgroundColor: palette.plum,
     paddingVertical: 16,
     borderRadius: 16,
     alignItems: 'center',

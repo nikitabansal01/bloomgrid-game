@@ -7,13 +7,19 @@ export const palette = {
   sage: '#D4E4D2',
   sageDeep: '#A8C4A4',
   ink: '#4A3F55',
-  inkSoft: '#7A7085',
+  inkSoft: '#6E6380',
   white: '#FFFFFF',
-  conflict: '#F4A4A4',
+  // Text-safe accents: each is >= 4.5:1 against white, cream, and the cell highlights.
+  plum: '#5B3F86',
+  sageInk: '#4E7A49',
+  conflictInk: '#9B1C3A',
+  padKey: '#F3EEFA',
+  padBorder: '#9C86C2',
+  conflict: '#FAD0D3',
   highlight: '#FFF0E8',
   selected: '#EDE4FF',
   given: '#F0EBE6',
-  note: '#9B8FA8',
+  note: '#6E6380',
 } as const;
 
 export const affirmations = [

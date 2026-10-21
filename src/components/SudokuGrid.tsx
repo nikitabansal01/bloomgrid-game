@@ -52,7 +52,15 @@ export function SudokuGrid({ grid, givensMask, notes, selected, onSelect }: Prop
                 accessibilityLabel={`Row ${row + 1} column ${col + 1}${val ? ` value ${val}` : ' empty'}`}
               >
                 {val !== 0 ? (
-                  <Text style={[styles.digit, isGiven && styles.givenDigit]}>{val}</Text>
+                  <Text
+                    style={[
+                      styles.digit,
+                      isGiven && styles.givenDigit,
+                      conflict && !isGiven && styles.conflictDigit,
+                    ]}
+                  >
+                    {val}
+                  </Text>
                 ) : cellNotes.length > 0 ? (
                   <View style={styles.notesWrap}>
                     {[1, 2, 3, 4, 5, 6].map((n) => (
@@ -72,10 +80,12 @@ export function SudokuGrid({ grid, givensMask, notes, selected, onSelect }: Prop
 }
 
 const cellSize = 48;
+const boardBorder = 2;
+export const BOARD_WIDTH = cellSize * GRID_SIZE + boardBorder * 2;
 
 const styles = StyleSheet.create({
   board: {
-    borderWidth: 2,
+    borderWidth: boardBorder,
     borderColor: palette.ink,
     borderRadius: 12,
     overflow: 'hidden',
@@ -117,11 +127,14 @@ const styles = StyleSheet.create({
   digit: {
     fontSize: 22,
     fontWeight: '600',
-    color: palette.lavenderDeep,
+    color: palette.plum,
   },
   givenDigit: {
     color: palette.ink,
     fontWeight: '700',
+  },
+  conflictDigit: {
+    color: palette.conflictInk,
   },
   notesWrap: {
     flexDirection: 'row',

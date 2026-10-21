@@ -12,6 +12,7 @@ type Screen = 'home' | 'game' | 'win';
 export default function App() {
   const [screen, setScreen] = useState<Screen>('home');
   const [sessionSeconds, setSessionSeconds] = useState(0);
+  const [puzzleDate, setPuzzleDate] = useState<string | null>(null);
 
   return (
     <SafeAreaProvider>
@@ -21,14 +22,19 @@ export default function App() {
         {screen === 'game' && (
           <GameScreen
             onBack={() => setScreen('home')}
-            onWin={(sec) => {
+            onWin={(sec, date) => {
               setSessionSeconds(sec);
+              setPuzzleDate(date);
               setScreen('win');
             }}
           />
         )}
         {screen === 'win' && (
-          <WinScreen sessionSeconds={sessionSeconds} onHome={() => setScreen('home')} />
+          <WinScreen
+            sessionSeconds={sessionSeconds}
+            puzzleDate={puzzleDate ?? undefined}
+            onHome={() => setScreen('home')}
+          />
         )}
       </AdProvider>
     </SafeAreaProvider>

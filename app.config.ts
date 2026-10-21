@@ -61,6 +61,7 @@ const config = {
     bundler: 'metro',
   },
   plugins: [
+    'expo-audio',
     [
       'react-native-google-mobile-ads',
       {

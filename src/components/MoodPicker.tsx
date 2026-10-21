@@ -33,7 +33,9 @@ export function MoodPicker({ onPick, selected }: Props) {
 const styles = StyleSheet.create({
   wrap: {
     marginTop: 16,
-    padding: 16,
+    padding: 12,
+    width: '100%',
+    maxWidth: 360,
     backgroundColor: palette.white,
     borderRadius: 16,
     borderWidth: 1,
@@ -47,22 +49,24 @@ const styles = StyleSheet.create({
   },
   row: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    gap: 8,
+    gap: 6,
   },
   chip: {
-    padding: 10,
+    flex: 1,
+    height: 48,
     borderRadius: 12,
     backgroundColor: palette.cream,
     borderWidth: 1,
     borderColor: palette.lavender,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   chipOn: {
-    borderColor: palette.lavenderDeep,
+    borderWidth: 2,
+    borderColor: palette.plum,
     backgroundColor: palette.lavender,
   },
   emoji: {
-    fontSize: 24,
+    fontSize: 22,
   },
 });

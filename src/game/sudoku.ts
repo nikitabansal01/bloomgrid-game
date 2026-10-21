@@ -88,6 +88,40 @@ export function generateSolution(seed: string): number[][] {
   return grid;
 }
 
+/** Counts solutions of `grid`, stopping early once `limit` is reached. Does not mutate `grid`. */
+export function countSolutions(grid: number[][], limit = 2): number {
+  const work = cloneGrid(grid);
+  let count = 0;
+  const search = (): boolean => {
+    for (let row = 0; row < GRID_SIZE; row++) {
+      for (let col = 0; col < GRID_SIZE; col++) {
+        if (work[row][col] !== 0) continue;
+        for (const num of DIGITS) {
+          if (isValidPlacement(work, row, col, num)) {
+            work[row][col] = num;
+            if (search()) return true;
+            work[row][col] = 0;
+          }
+        }
+        return false;
+      }
+    }
+    count++;
+    return count >= limit;
+  };
+  search();
+  return count;
+}
+
+export function hasUniqueSolution(grid: number[][]): boolean {
+  return countSolutions(grid, 2) === 1;
+}
+
+/**
+ * Removes clues in a seeded random order, keeping each removal only if the
+ * puzzle still has exactly one solution. Stops once `givens` clues remain or no
+ * further clue can be removed, so the result may keep more than `givens` clues.
+ */
 export function makePuzzle(solution: number[][], seed: string, givens = 16): {
   puzzle: number[][];
   givensMask: boolean[][];
@@ -98,15 +132,18 @@ export function makePuzzle(solution: number[][], seed: string, givens = 16): {
   for (let r = 0; r < GRID_SIZE; r++) {
     for (let c = 0; c < GRID_SIZE; c++) cells.push([r, c]);
   }
-  shuffle(cells, rand);
-  const toRemove = GRID_SIZE * GRID_SIZE - givens;
-  for (let i = 0; i < toRemove; i++) {
-    const [r, c] = cells[i];
+  let remaining = GRID_SIZE * GRID_SIZE;
+  for (const [r, c] of shuffle(cells, rand)) {
+    if (remaining <= givens) break;
+    const value = puzzle[r][c];
     puzzle[r][c] = 0;
+    if (hasUniqueSolution(puzzle)) {
+      remaining--;
+    } else {
+      puzzle[r][c] = value;
+    }
   }
-  const givensMask = puzzle.map((row, r) =>
-    row.map((val, c) => val !== 0),
-  );
+  const givensMask = puzzle.map((row) => row.map((val) => val !== 0));
   return { puzzle, givensMask };
 }
 
@@ -126,33 +163,34 @@ export function getConflicts(grid: number[][]): boolean[][] {
   return conflicts;
 }
 
-export function isPuzzleComplete(grid: number[][], solution: number[][]): boolean {
+function isCellSettled(grid: number[][], row: number, col: number): boolean {
+  const n = grid[row][col];
+  return n !== 0 && isValidPlacement(grid, row, col, n, true);
+}
+
+/** True when every cell is filled and no row, column, or box repeats a digit. */
+export function isPuzzleComplete(grid: number[][]): boolean {
   for (let r = 0; r < GRID_SIZE; r++) {
     for (let c = 0; c < GRID_SIZE; c++) {
-      if (grid[r][c] !== solution[r][c]) return false;
+      if (!isCellSettled(grid, r, c)) return false;
     }
   }
   return true;
 }
 
-export function isRowComplete(grid: number[][], solution: number[][], row: number): boolean {
+export function isRowComplete(grid: number[][], row: number): boolean {
   for (let c = 0; c < GRID_SIZE; c++) {
-    if (grid[row][c] !== solution[row][c]) return false;
+    if (!isCellSettled(grid, row, c)) return false;
   }
   return true;
 }
 
-export function isBoxComplete(
-  grid: number[][],
-  solution: number[][],
-  boxRow: number,
-  boxCol: number,
-): boolean {
+export function isBoxComplete(grid: number[][], boxRow: number, boxCol: number): boolean {
   const r0 = boxRow * BOX_ROWS;
   const c0 = boxCol * BOX_COLS;
   for (let r = r0; r < r0 + BOX_ROWS; r++) {
     for (let c = c0; c < c0 + BOX_COLS; c++) {
-      if (grid[r][c] !== solution[r][c]) return false;
+      if (!isCellSettled(grid, r, c)) return false;
     }
   }
   return true;

@@ -8,7 +8,7 @@ import {
   View,
 } from 'react-native';
 import { useAds } from '../ads/AdProvider';
-import { AffirmationBackdrop } from '../components/AffirmationBackdrop';
+import { AffirmationWord } from '../components/AffirmationWord';
 import { CycleMascot } from '../components/CycleMascot';
 import { MoodPicker } from '../components/MoodPicker';
 import {
@@ -23,10 +23,11 @@ import { cycleCopy, palette } from '../theme/colors';
 
 type Props = {
   sessionSeconds: number;
+  puzzleDate?: string;
   onHome: () => void;
 };
 
-export function WinScreen({ sessionSeconds, onHome }: Props) {
+export function WinScreen({ sessionSeconds, puzzleDate, onHome }: Props) {
   const { showInterstitialIfAllowed } = useAds();
   const [streak, setStreak] = useState<StreakData>({ count: 0, lastDate: null });
   const [mood, setMood] = useState<string | null>(null);
@@ -34,11 +35,11 @@ export function WinScreen({ sessionSeconds, onHome }: Props) {
 
   useEffect(() => {
     (async () => {
-      const s = await recordDailyWin();
+      const s = await recordDailyWin(puzzleDate);
       setStreak(s);
       await showInterstitialIfAllowed(sessionSeconds);
     })();
-  }, [sessionSeconds, showInterstitialIfAllowed]);
+  }, [sessionSeconds, puzzleDate, showInterstitialIfAllowed]);
 
   const onShare = async () => {
     const message = await getShareLine(streak.count);
@@ -51,15 +52,15 @@ export function WinScreen({ sessionSeconds, onHome }: Props) {
 
   const onMood = async (emoji: string) => {
     setMood(emoji);
-    await saveMoodForToday(emoji);
+    await saveMoodForToday(emoji, puzzleDate);
   };
 
   return (
     <View style={styles.root}>
-      <AffirmationBackdrop active />
       <ScrollView contentContainerStyle={styles.scroll}>
         <CycleMascot mood="celebrate" size={64} />
         <Text style={styles.title}>You did it ✿</Text>
+        <AffirmationWord />
         <Text style={styles.sub}>{copy}</Text>
         <Text style={styles.normalize}>
           However your body feels today is valid — this win is just for you.
@@ -96,6 +97,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingTop: 48,
     paddingBottom: 48,
+    width: '100%',
+    maxWidth: 480,
+    alignSelf: 'center',
   },
   title: {
     fontSize: 28,
@@ -133,7 +137,7 @@ const styles = StyleSheet.create({
   streakNum: {
     fontSize: 48,
     fontWeight: '700',
-    color: palette.sageDeep,
+    color: palette.sageInk,
   },
   streakLabel: {
     fontSize: 14,
@@ -160,7 +164,7 @@ const styles = StyleSheet.create({
   },
   homeText: {
     fontSize: 16,
-    color: palette.lavenderDeep,
+    color: palette.plum,
     fontWeight: '600',
   },
 });
